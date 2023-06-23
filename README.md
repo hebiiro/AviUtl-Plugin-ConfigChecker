@@ -1,3 +1,5 @@
+![ConfigChecker 1 0 1](https://github.com/hebiiro/AviUtl-Plugin-ConfigChecker/assets/96464759/05a5fc56-824a-41b7-ad82-b9eb28b585b3)
+
 # AviUtl プラグイン - コンフィグチェッカー
 
 動画を出力するとき、設定が適正かどうかチェックします。<br>
@@ -18,12 +20,13 @@
 
 ## 更新履歴
 
+* 1.0.1 - 2023/06/24 表示テキストを修正
 * 1.0.0 - 2023/06/24 初版
 
 ## 動作確認
 
 * (必須) AviUtl 1.10 & 拡張編集 0.92 http://spring-fragrance.mints.ne.jp/aviutl/
-* (共存確認) patch.aul r42 https://scrapbox.io/ePi5131/patch.aul
+* (共存確認) patch.aul r43 謎さうなフォーク版28 https://scrapbox.io/nazosauna/patch.aul
 
 ## クレジット
 

@@ -88,9 +88,9 @@ struct Checker {
 
 			TCHAR subText[MAX_PATH] = {};
 			::StringCbPrintf(subText, sizeof(subText),
-				_T("注意 : プロジェクトの一部分だけを出力するように設定されています\n")
-				_T("全体の長さが %02d:%02d:%05.2f のプロジェクトに対して\n")
-				_T("%02d:%02d:%05.2f～%02d:%02d:%05.2f の出力範囲が指定されています\n\n"),
+				_T("注意 : 全体の長さが %02d:%02d:%05.2f のプロジェクトに対して\n")
+				_T("%02d:%02d:%05.2f～%02d:%02d:%05.2f の出力範囲が指定されています\n")
+				_T("この設定のままだとプロジェクトの一部分しか出力されません\n\n"),
 				total.hour(), total.min(), total.getSec(),
 				selectStart.hour(), selectStart.min(), selectStart.getSec(),
 				selectEnd.hour(), selectEnd.min(), selectEnd.getSec());
@@ -148,7 +148,8 @@ struct Checker {
 			::StringCbPrintf(subText, sizeof(subText),
 				_T("注意 : 最終フレーム位置と全アイテムの最終位置が一致しません\n")
 				_T("%02d:%02d:%05.2f (最終フレーム位置)\n")
-				_T("%02d:%02d:%05.2f (全アイテムの最終位置)\n\n"),
+				_T("%02d:%02d:%05.2f (全アイテムの最終位置)\n")
+				_T("この設定のままだと尺余りが発生する可能性があります\n\n"),
 				frameTime.hour(), frameTime.min(), frameTime.getSec(),
 				itemTime.hour(), itemTime.min(), itemTime.getSec());
 
@@ -308,7 +309,7 @@ EXTERN_C AviUtl::FilterPluginDLL* WINAPI GetFilterTable()
 	// check_def を変更できるようにしたほうがいいかもしれない。
 
 	LPCSTR name = "コンフィグチェッカー";
-	LPCSTR information = "コンフィグチェッカー 1.0.0 by 蛇色";
+	LPCSTR information = "コンフィグチェッカー 1.1.0 by 蛇色";
 
 	static AviUtl::FilterPluginDLL filter = {
 		.flag =
