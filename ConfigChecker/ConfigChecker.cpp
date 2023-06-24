@@ -14,6 +14,19 @@ struct Check
 {
 	static const int32_t CheckRange = 0;
 	static const int32_t CheckLastFrame = 1;
+	static const int32_t CheckFrameRateConfig = 2;
+};
+
+LPCSTR check_name[] = {
+	"エンコード範囲をチェックする",
+	"最終フレームをチェックする",
+	"[フレームレートの変更] をチェックする",
+};
+
+int check_def[] = {
+	TRUE,
+	TRUE,
+	TRUE,
 };
 
 //--------------------------------------------------------------------
@@ -74,7 +87,7 @@ struct Checker {
 
 	/*
 		出力範囲が指定されている場合は TRUE を返す。
-		その場合はメッセージボックスに表示するテキストを text に追加する。
+		さらにその場合はメッセージボックスに表示するテキストを text に追加する。
 	*/
 	BOOL checkRange()
 	{
@@ -88,8 +101,8 @@ struct Checker {
 
 			TCHAR subText[MAX_PATH] = {};
 			::StringCbPrintf(subText, sizeof(subText),
-				_T("注意 : 全体の長さが %02d:%02d:%05.2f のプロジェクトに対して\n")
-				_T("%02d:%02d:%05.2f～%02d:%02d:%05.2f の出力範囲が指定されています\n")
+				_T("注意 : 全体の長さが [%02d:%02d:%05.2f] のプロジェクトに対して\n")
+				_T("[%02d:%02d:%05.2f]～[%02d:%02d:%05.2f] の出力範囲が指定されています\n")
 				_T("この設定のままだとプロジェクトの一部分しか出力されません\n\n"),
 				total.hour(), total.min(), total.getSec(),
 				selectStart.hour(), selectStart.min(), selectStart.getSec(),
@@ -104,7 +117,7 @@ struct Checker {
 
 	/*
 		最終フレーム位置と全アイテムの最終位置が一致しない場合は TRUE を返す。
-		その場合はメッセージボックスに表示するテキストを text に追加する。
+		さらにその場合はメッセージボックスに表示するテキストを text に追加する。
 	*/
 	BOOL checkLastFrame()
 	{
@@ -147,11 +160,46 @@ struct Checker {
 			TCHAR subText[MAX_PATH] = {};
 			::StringCbPrintf(subText, sizeof(subText),
 				_T("注意 : 最終フレーム位置と全アイテムの最終位置が一致しません\n")
-				_T("%02d:%02d:%05.2f (最終フレーム位置)\n")
-				_T("%02d:%02d:%05.2f (全アイテムの最終位置)\n")
+				_T("[%02d:%02d:%05.2f] (最終フレーム位置)\n")
+				_T("[%02d:%02d:%05.2f] (全アイテムの最終位置)\n")
 				_T("この設定のままだと尺余りが発生する可能性があります\n\n"),
 				frameTime.hour(), frameTime.min(), frameTime.getSec(),
 				itemTime.hour(), itemTime.min(), itemTime.getSec());
+
+			// text に subText を追加する。
+			::StringCbCat(text, sizeof(text), subText);
+		}
+
+		return TRUE;
+	}
+
+	/*
+		[フレームレートの変更] で [なし] 以外が指定されている場合は TRUE を返す。
+		さらにその場合はメッセージボックスに表示するテキストを text に追加する。
+	*/
+	BOOL checkFrameRateConfig()
+	{
+		// メモリアドレスから [フレームレートの変更] を取得する。
+		uintptr_t aviutl_base = (uintptr_t)::GetModuleHandle(0);
+		auto framerate_fp = (AviUtl::FilterPlugin*)(aviutl_base + 0x080b28);
+		auto framerateConfig = framerate_fp->track_array[0];
+
+		if (framerateConfig == 0)
+			return FALSE; // [フレームレートの変更] が [なし] だった。
+
+		{
+			LPCSTR label = "不明";
+
+			// framerateConfig がインデックスとして使えそうなら項目名を取得する。
+			if (framerateConfig >= 0 && framerateConfig < framerate_fp->check_n)
+				label = framerate_fp->check_name[framerateConfig];
+
+			TCHAR subText[MAX_PATH] = {};
+			::StringCbPrintf(subText, sizeof(subText),
+				_T("注意 : [設定] > [フレームレートの変更] が\n")
+				_T("[%hs] に設定されています\n")
+				_T("この設定のままだとフレームレートが低下した状態で出力されます\n\n"),
+				label);
 
 			// text に subText を追加する。
 			::StringCbCat(text, sizeof(text), subText);
@@ -170,6 +218,7 @@ struct Checker {
 		// 有効になっているチェックを実行する。
 		if (fp->check[Check::CheckRange]) checkRange();
 		if (fp->check[Check::CheckLastFrame]) checkLastFrame();
+		if (fp->check[Check::CheckFrameRateConfig]) checkFrameRateConfig();
 
 		// text の長さが 0 以外になっているなら、どれかのチェックに引っかかっている。
 		if (_tcslen(text) != 0)
@@ -294,22 +343,13 @@ BOOL func_proc(AviUtl::FilterPlugin* fp, AviUtl::FilterProcInfo* fpip)
 
 //--------------------------------------------------------------------
 
-LPCSTR check_name[] = {
-	"エンコード範囲をチェックする",
-	"最終フレームをチェックする",
-};
-int check_def[] = {
-	TRUE,
-	TRUE,
-};
-
 EXTERN_C AviUtl::FilterPluginDLL* WINAPI GetFilterTable()
 {
 	// ここで ini ファイルなどから値を取得して
 	// check_def を変更できるようにしたほうがいいかもしれない。
 
 	LPCSTR name = "コンフィグチェッカー";
-	LPCSTR information = "コンフィグチェッカー 1.1.0 by 蛇色";
+	LPCSTR information = "コンフィグチェッカー 1.2.0 by 蛇色";
 
 	static AviUtl::FilterPluginDLL filter = {
 		.flag =
